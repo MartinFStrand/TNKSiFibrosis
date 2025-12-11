@@ -11,22 +11,20 @@ BiocManager::install("regionReport")
 BiocManager::install("apeglm")
 BiocManager::install(c("DT", "sessioninfo"))
 BiocManager::install("InteractiveComplexHeatmap")
-install.packages("pheatmap")
 install.packages("gplots")
 
 # Loading packages: 
 library("gplots")
 library("RColorBrewer")
 library("ggplot2")
-library("pheatmap")
 library("genefilter")
 library("DESeq2")
 library("regionReport")
 library("apeglm")
 library("edgeR")
-library(dplyr)
-library(InteractiveComplexHeatmap)
-library(ggrepel)
+library("dplyr")
+library("InteractiveComplexHeatmap")
+library("ggrepel")
 
 # Load and prepare dataset
 setwd("~/Desktop/ANA")
@@ -62,9 +60,15 @@ BvIO <- dataset[,c(10:12,16:18)]
 BvIOm <- Meta[c(10:12,16:18),]
 BvIN <- dataset[,c(13:18)]
 BvINm <- Meta[c(13:18),]
+IOvC <- dataset[,c(1:3,10:12)]
+IOvCm <- Meta[c(1:3,10:12),]
+BvC <- dataset[,c(1:3,16:18)]
+BvCm <- Meta[c(1:3,16:18),]
+INvC <- dataset[,c(1:3,13:15)]
+INvCm <- Meta[c(1:3,13:15),]
 
 
-
+##### DESeq2 analysis for all contrasts:
 ### Contrast1 - OM-153 vs IPF-RC
 IOvIm$group <- c(1,1,1,2,2,2)
 
@@ -91,9 +95,7 @@ summary(res)
 res <- lfcShrink(dds, coef="group", type="apeglm")
 resOrdered <- res[order(res$padj),]
 write.table(as.data.frame(resOrdered), file=paste("DESeq-IPF-153vsIPF.txt", sep="."), quote=FALSE, sep="\t")
-
 pdf(file="DESeq2-IPF-153vsIPF.pdf")
-
 DESeq2::plotMA(res, ylim = (c(-3,3)))
 
 ##Result vulcanoplot
@@ -119,7 +121,6 @@ abline(v=c(-1,1), col="brown")
 abline(h=-log10(alpha), col="brown")
 dev.off()
 
-
 # Bach ajustment and data export
 vsd <- vst(dds, blind=FALSE)
 mat <- assay(vsd)
@@ -127,9 +128,7 @@ mm <- model.matrix(~group, colData(vsd))
 mat <- limma::removeBatchEffect(mat, batch=vsd$batch, design=mm)
 assay(vsd) <- mat
 colData(vsd)
-
 write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-IOvI.txt", sep="."), quote=FALSE, sep="\t", col.names = NA, row.names = TRUE)
-
 
 
 
@@ -137,7 +136,6 @@ write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-IOvI.txt", se
 IvC <- dataset[,c(1:3,7:9)]
 IvCm <- Meta[c(1:3,7:9),]
 IvCm$group <- c(1,1,1,2,2,2)
-
 
 # Generating a DESeq2 object:
 ddsFullCountTableIvC <- DESeqDataSetFromMatrix(
@@ -155,7 +153,6 @@ pdf(file="DESeq2-PCAIvC.pdf", width = 14, height = 8)
 z <- plotPCA(rldIvC, intgroup=c("sample"), ntop = 500)
 z + geom_label(aes(label = name))
 dev.off()
-
 resultsNames(ddsIvC)
 
 # Result
@@ -164,13 +161,10 @@ summary(resIvC)
 resIvC <- lfcShrink(ddsIvC, coef="group", type="apeglm")
 resOrderedIvC <- resIvC[order(resIvC$padj),]
 write.table(as.data.frame(resOrderedIvC), file=paste("DESeq-IvC.txt", sep="."), quote=FALSE, sep="\t")
-
 pdf(file="DESeq2-IvC.pdf")
-
 DESeq2::plotMA(resIvC, ylim = (c(-3,3)))
 
-##Result vulcanoplot
-alpha <- 0.05 # Threshold on the adjusted p-value
+# Result vulcanoplot
 cols <- densCols(resIvC$log2FoldChange, -log10(resIvC$pvalue))
 plot(resIvC$log2FoldChange, -log10(resIvC$padj), col=cols, panel.first=grid(),
      main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
@@ -192,7 +186,6 @@ abline(v=c(-1,1), col="brown")
 abline(h=-log10(alpha), col="brown")
 dev.off()
 
-
 # Bach ajustment and data export
 vsdIvC <- vst(ddsIvC, blind=FALSE)
 mat <- assay(vsdIvC)
@@ -200,17 +193,12 @@ mm <- model.matrix(~group, colData(vsdIvC))
 mat <- limma::removeBatchEffect(mat, batch=vsdIvC$batch, design=mm)
 assay(vsdIvC) <- mat
 colData(vsdIvC)
-
 write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-IvC.txt", sep="."), quote=FALSE, sep="\t", col.names = NA, row.names = TRUE)
-
-
-
 
 ### Contrast3
 IOvO <- dataset[,c(4:6,10:12)]
 IOvOm <- Meta[c(4:6,10:12),]
 IOvOm$group <- c(1,1,1,2,2,2)
-
 
 # Generating a DESeq2 object:
 ddsFullCountTableIOvO <- DESeqDataSetFromMatrix(
@@ -228,7 +216,6 @@ pdf(file="DESeq2-PCAIOvO.pdf", width = 14, height = 8)
 z <- plotPCA(rldIOvO, intgroup=c("sample"), ntop = 500)
 z + geom_label(aes(label = name))
 dev.off()
-
 resultsNames(ddsIOvO)
 
 # Result
@@ -237,13 +224,10 @@ summary(resIOvO)
 resIOvO <- lfcShrink(ddsIOvO, coef="group", type="apeglm")
 resOrderedIOvO <- resIOvO[order(resIOvO$padj),]
 write.table(as.data.frame(resOrderedIOvO), file=paste("DESeq-IOvO.txt", sep="."), quote=FALSE, sep="\t")
-
 pdf(file="DESeq2-IOvO.pdf")
-
 DESeq2::plotMA(resIOvO, ylim = (c(-3,3)))
 
-##Result vulcanoplot
-alpha <- 0.05 # Threshold on the adjusted p-value
+# Result vulcanoplot
 cols <- densCols(resIOvO$log2FoldChange, -log10(resIOvO$pvalue))
 plot(resIOvO$log2FoldChange, -log10(resIOvO$padj), col=cols, panel.first=grid(),
      main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
@@ -265,7 +249,6 @@ abline(v=c(-1,1), col="brown")
 abline(h=-log10(alpha), col="brown")
 dev.off()
 
-
 # Bach ajustment and data export
 vsdIOvO <- vst(ddsIOvO, blind=FALSE)
 mat <- assay(vsdIOvO)
@@ -282,7 +265,6 @@ write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-IOvO.txt", se
 INvI <- dataset[,c(7:9,13:15)]
 INvIm <- Meta[c(7:9,13:15),]
 INvIm$group <- c(1,1,1,2,2,2)
-
 
 # Generating a DESeq2 object:
 ddsFullCountTableINvI <- DESeqDataSetFromMatrix(
@@ -301,7 +283,6 @@ z <- plotPCA(rldINvI, intgroup=c("sample"), ntop = 500)
 z + geom_label(aes(label = name))
 dev.off()
 
-
 # Result
 resINvI <- results(ddsINvI, list(c("group")))
 summary(resINvI)
@@ -313,8 +294,7 @@ pdf(file="DESeq2-INvI.pdf")
 
 DESeq2::plotMA(resINvI, ylim = (c(-3,3)))
 
-##Result vulcanoplot
-alpha <- 0.05 # Threshold on the adjusted p-value
+# Result vulcanoplot
 cols <- densCols(resINvI$log2FoldChange, -log10(resINvI$pvalue))
 plot(resINvI$log2FoldChange, -log10(resINvI$padj), col=cols, panel.first=grid(),
      main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
@@ -336,7 +316,6 @@ abline(v=c(-1,1), col="brown")
 abline(h=-log10(alpha), col="brown")
 dev.off()
 
-
 # Bach ajustment and data export
 vsdINvI <- vst(ddsINvI, blind=FALSE)
 mat <- assay(vsdINvI)
@@ -348,13 +327,10 @@ colData(vsdINvI)
 write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-INvI.txt", sep="."), quote=FALSE, sep="\t", col.names = NA, row.names = TRUE)
 
 
-
-
 ### Contrast5
 BvI <- dataset[,c(7:9,16:18)]
 BvIm <- Meta[c(7:9,16:18),]
 BvIm$group <- c(1,1,1,2,2,2)
-
 
 # Generating a DESeq2 object:
 ddsFullCountTableBvI <- DESeqDataSetFromMatrix(
@@ -373,8 +349,6 @@ z <- plotPCA(rldBvI, intgroup=c("sample"), ntop = 500)
 z + geom_label(aes(label = name))
 dev.off()
 
-
-
 # Result
 resBvI <- results(ddsBvI, list(c("group")))
 summary(resBvI)
@@ -387,7 +361,6 @@ pdf(file="DESeq2-BvI.pdf")
 DESeq2::plotMA(resBvI, ylim = (c(-3,3)))
 
 ##Result vulcanoplot
-alpha <- 0.05 # Threshold on the adjusted p-value
 cols <- densCols(resBvI$log2FoldChange, -log10(resBvI$pvalue))
 plot(resBvI$log2FoldChange, -log10(resBvI$padj), col=cols, panel.first=grid(),
      main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
@@ -409,7 +382,6 @@ abline(v=c(-1,1), col="brown")
 abline(h=-log10(alpha), col="brown")
 dev.off()
 
-
 # Bach ajustment and data export
 vsdBvI <- vst(ddsBvI, blind=FALSE)
 mat <- assay(vsdBvI)
@@ -421,13 +393,10 @@ colData(vsdBvI)
 write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-BvI.txt", sep="."), quote=FALSE, sep="\t", col.names = NA, row.names = TRUE)
 
 
-
-
 ### Contrast6
 BvIO <- dataset[,c(10:12,16:18)]
 BvIOm <- Meta[c(10:12,16:18),]
 BvIOm$group <- c(1,1,1,2,2,2)
-
 
 # Generating a DESeq2 object:
 ddsFullCountTableBvIO <- DESeqDataSetFromMatrix(
@@ -446,7 +415,6 @@ z <- plotPCA(rldBvIO, intgroup=c("sample"), ntop = 500)
 z + geom_label(aes(label = name))
 dev.off()
 
-
 # Result
 resBvIO <- results(ddsBvIO, list(c("group")))
 summary(resBvIO)
@@ -459,7 +427,6 @@ pdf(file="DESeq2-BvIO.pdf")
 DESeq2::plotMA(resBvIO, ylim = (c(-3,3)))
 
 ##Result vulcanoplot
-alpha <- 0.05 # Threshold on the adjusted p-value
 cols <- densCols(resBvIO$log2FoldChange, -log10(resBvIO$pvalue))
 plot(resBvIO$log2FoldChange, -log10(resBvIO$padj), col=cols, panel.first=grid(),
      main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
@@ -481,7 +448,6 @@ abline(v=c(-1,1), col="brown")
 abline(h=-log10(alpha), col="brown")
 dev.off()
 
-
 # Bach ajustment and data export
 vsdBvIO <- vst(ddsBvIO, blind=FALSE)
 mat <- assay(vsdBvIO)
@@ -498,7 +464,6 @@ write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-BvIO.txt", se
 BvIN <- dataset[,c(13:18)]
 BvINm <- Meta[c(13:18),]
 BvINm$group <- c(1,1,1,2,2,2)
-
 
 # Generating a DESeq2 object:
 ddsFullCountTableBvIN <- DESeqDataSetFromMatrix(
@@ -517,7 +482,6 @@ z <- plotPCA(rldBvIN, intgroup=c("sample"), ntop = 500)
 z + geom_label(aes(label = name))
 dev.off()
 
-
 # Result
 resBvIN <- results(ddsBvIN, list(c("group")))
 summary(resBvIN)
@@ -530,7 +494,6 @@ pdf(file="DESeq2-BvIN.pdf")
 DESeq2::plotMA(resBvIN, ylim = (c(-3,3)))
 
 ##Result vulcanoplot
-alpha <- 0.05 # Threshold on the adjusted p-value
 cols <- densCols(resBvIN$log2FoldChange, -log10(resBvIN$pvalue))
 plot(resBvIN$log2FoldChange, -log10(resBvIN$padj), col=cols, panel.first=grid(),
      main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
@@ -552,7 +515,6 @@ abline(v=c(-1,1), col="brown")
 abline(h=-log10(alpha), col="brown")
 dev.off()
 
-
 # Bach ajustment and data export
 vsdBvIN <- vst(ddsBvIN, blind=FALSE)
 mat <- assay(vsdBvIN)
@@ -564,13 +526,10 @@ colData(vsdBvIN)
 write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-BvIN.txt", sep="."), quote=FALSE, sep="\t", col.names = NA, row.names = TRUE)
 
 
-
-
 ### Contrast8
 OvC <- dataset[,c(1:6)]
 OvCm <- Meta[c(1:6),]
 OvCm$group <- c(1,1,1,2,2,2)
-
 
 # Generating a DESeq2 object:
 ddsFullCountTableOvC <- DESeqDataSetFromMatrix(
@@ -589,7 +548,6 @@ z <- plotPCA(rldOvC, intgroup=c("sample"), ntop = 500)
 z + geom_label(aes(label = name))
 dev.off()
 
-
 # Result
 resOvC <- results(ddsOvC, list(c("group")))
 summary(resOvC)
@@ -598,7 +556,9 @@ resOrderedOvC <- resOvC[order(resOvC$padj),]
 write.table(as.data.frame(resOrderedOvC), file=paste("DESeq-OvC.txt", sep="."), quote=FALSE, sep="\t")
 
 pdf(file="DESeq2-OvC.pdf")
+
 DESeq2::plotMA(resOvC, ylim = (c(-3,3)))
+
 ##Result vulcanoplot
 alpha <- 0.05 # Threshold on the adjusted p-value
 cols <- densCols(resOvC$log2FoldChange, -log10(resOvC$pvalue))
@@ -622,7 +582,6 @@ abline(v=c(-1,1), col="brown")
 abline(h=-log10(alpha), col="brown")
 dev.off()
 
-
 # Bach ajustment and data export
 vsdOvC <- vst(ddsOvC, blind=FALSE)
 mat <- assay(vsdOvC)
@@ -632,3 +591,201 @@ assay(vsdOvC) <- mat
 colData(vsdOvC)
 
 write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-OvC.txt", sep="."), quote=FALSE, sep="\t", col.names = NA, row.names = TRUE)
+
+
+
+
+### Contrast 9
+INvC <- dataset[,c(1:6)]
+INvCm <- Meta[c(1:6),]
+INvCm$group <- c(1,1,1,2,2,2)
+
+# Generating a DESeq2 object:
+ddsFullCountTableINvC <- DESeqDataSetFromMatrix(
+  countData = INvC,
+  colData = INvCm,
+  design = ~ group + batch)
+
+# ANALYSIS
+ddsINvC <- ddsFullCountTableINvC
+as.data.frame(colData(ddsINvC)) #Checking factors
+ddsINvC <- DESeq(ddsINvC)
+rldINvC <- rlog(ddsINvC, blind=FALSE)
+
+pdf(file="DESeq2-PCAINvC.pdf", width = 14, height = 8)
+z <- plotPCA(rldINvC, intgroup=c("sample"), ntop = 500)
+z + geom_label(aes(label = name))
+dev.off()
+resultsNames(ddsINvC)
+
+# Result
+resINvC <- results(ddsINvC, list(c("group")))
+summary(resINvC)
+resINvC <- lfcShrink(ddsINvC, coef="group", type="apeglm")
+resOrderedINvC <- resINvC[order(resINvC$padj),]
+write.table(as.data.frame(resOrderedINvC), file=paste("DESeq-INvC.txt", sep="."), quote=FALSE, sep="\t")
+pdf(file="DESeq2-INvC.pdf")
+DESeq2::plotMA(resINvC, ylim = (c(-3,3)))
+
+# Result vulcanoplot
+cols <- densCols(resINvC$log2FoldChange, -log10(resINvC$pvalue))
+plot(resINvC$log2FoldChange, -log10(resINvC$padj), col=cols, panel.first=grid(),
+     main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
+     pch=20, cex=0.6)
+abline(v=0)
+abline(v=c(-1,1), col="brown")
+abline(h=-log10(alpha), col="brown")
+
+gn.selected <- abs(resINvC$log2FoldChange) > 1.5 & resINvC$padj < alpha 
+text(resINvC$log2FoldChange[gn.selected],
+     -log10(resINvC$padj)[gn.selected],
+     lab=rownames(resINvC)[gn.selected ], cex=0.6)
+
+plot(resINvC$log2FoldChange, -log10(resINvC$padj), col=cols, panel.first=grid(),
+     main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
+     pch=20, cex=0.6)
+abline(v=0)
+abline(v=c(-1,1), col="brown")
+abline(h=-log10(alpha), col="brown")
+dev.off()
+
+# Bach ajustment and data export
+vsdINvC <- vst(ddsINvC, blind=FALSE)
+mat <- assay(vsdINvC)
+mm <- model.matrix(~group, colData(vsdINvC))
+mat <- limma::removeBatchEffect(mat, batch=vsdINvC$batch, design=mm)
+assay(vsdINvC) <- mat
+colData(vsdINvC)
+write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-INvC.txt", sep="."), quote=FALSE, sep="\t", col.names = NA, row.names = TRUE)
+
+
+
+### Contrast 10
+BvC <- dataset[,c(1:6)]
+BvCm <- Meta[c(1:6),]
+BvCm$group <- c(1,1,1,2,2,2)
+
+# Generating a DESeq2 object:
+ddsFullCountTableBvC <- DESeqDataSetFromMatrix(
+  countData = BvC,
+  colData = BvCm,
+  design = ~ group + batch)
+
+# ANALYSIS
+ddsBvC <- ddsFullCountTableBvC
+as.data.frame(colData(ddsBvC)) #Checking factors
+ddsBvC <- DESeq(ddsBvC)
+rldBvC <- rlog(ddsBvC, blind=FALSE)
+
+pdf(file="DESeq2-PCABvC.pdf", width = 14, height = 8)
+z <- plotPCA(rldBvC, intgroup=c("sample"), ntop = 500)
+z + geom_label(aes(label = name))
+dev.off()
+resultsNames(ddsBvC)
+
+# Result
+resBvC <- results(ddsBvC, list(c("group")))
+summary(resBvC)
+resBvC <- lfcShrink(ddsBvC, coef="group", type="apeglm")
+resOrderedBvC <- resBvC[order(resBvC$padj),]
+write.table(as.data.frame(resOrderedBvC), file=paste("DESeq-BvC.txt", sep="."), quote=FALSE, sep="\t")
+pdf(file="DESeq2-BvC.pdf")
+DESeq2::plotMA(resBvC, ylim = (c(-3,3)))
+
+# Result vulcanoplot
+cols <- densCols(resBvC$log2FoldChange, -log10(resBvC$pvalue))
+plot(resBvC$log2FoldChange, -log10(resBvC$padj), col=cols, panel.first=grid(),
+     main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
+     pch=20, cex=0.6)
+abline(v=0)
+abline(v=c(-1,1), col="brown")
+abline(h=-log10(alpha), col="brown")
+
+gn.selected <- abs(resBvC$log2FoldChange) > 1.5 & resBvC$padj < alpha 
+text(resBvC$log2FoldChange[gn.selected],
+     -log10(resBvC$padj)[gn.selected],
+     lab=rownames(resBvC)[gn.selected ], cex=0.6)
+
+plot(resBvC$log2FoldChange, -log10(resBvC$padj), col=cols, panel.first=grid(),
+     main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
+     pch=20, cex=0.6)
+abline(v=0)
+abline(v=c(-1,1), col="brown")
+abline(h=-log10(alpha), col="brown")
+dev.off()
+
+# Bach ajustment and data export
+vsdBvC <- vst(ddsBvC, blind=FALSE)
+mat <- assay(vsdBvC)
+mm <- model.matrix(~group, colData(vsdBvC))
+mat <- limma::removeBatchEffect(mat, batch=vsdBvC$batch, design=mm)
+assay(vsdBvC) <- mat
+colData(vsdBvC)
+write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-BvC.txt", sep="."), quote=FALSE, sep="\t", col.names = NA, row.names = TRUE)
+
+
+
+### Contrast 11
+IOvC <- dataset[,c(1:6)]
+IOvCm <- Meta[c(1:6),]
+IOvCm$group <- c(1,1,1,2,2,2)
+
+# Generating a DESeq2 object:
+ddsFullCountTableIOvC <- DESeqDataSetFromMatrix(
+  countData = IOvC,
+  colData = IOvCm,
+  design = ~ group + batch)
+
+# ANALYSIS
+ddsIOvC <- ddsFullCountTableIOvC
+as.data.frame(colData(ddsIOvC)) #Checking factors
+ddsIOvC <- DESeq(ddsIOvC)
+rldIOvC <- rlog(ddsIOvC, blind=FALSE)
+
+pdf(file="DESeq2-PCAIOvC.pdf", width = 14, height = 8)
+z <- plotPCA(rldIOvC, intgroup=c("sample"), ntop = 500)
+z + geom_label(aes(label = name))
+dev.off()
+resultsNames(ddsIOvC)
+
+# Result
+resIOvC <- results(ddsIOvC, list(c("group")))
+summary(resIOvC)
+resIOvC <- lfcShrink(ddsIOvC, coef="group", type="apeglm")
+resOrderedIOvC <- resIOvC[order(resIOvC$padj),]
+write.table(as.data.frame(resOrderedIOvC), file=paste("DESeq-IOvC.txt", sep="."), quote=FALSE, sep="\t")
+pdf(file="DESeq2-IOvC.pdf")
+DESeq2::plotMA(resIOvC, ylim = (c(-3,3)))
+
+# Result vulcanoplot
+cols <- densCols(resIOvC$log2FoldChange, -log10(resIOvC$pvalue))
+plot(resIOvC$log2FoldChange, -log10(resIOvC$padj), col=cols, panel.first=grid(),
+     main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
+     pch=20, cex=0.6)
+abline(v=0)
+abline(v=c(-1,1), col="brown")
+abline(h=-log10(alpha), col="brown")
+
+gn.selected <- abs(resIOvC$log2FoldChange) > 1.5 & resIOvC$padj < alpha 
+text(resIOvC$log2FoldChange[gn.selected],
+     -log10(resIOvC$padj)[gn.selected],
+     lab=rownames(resIOvC)[gn.selected ], cex=0.6)
+
+plot(resIOvC$log2FoldChange, -log10(resIOvC$padj), col=cols, panel.first=grid(),
+     main="Volcano plot", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",
+     pch=20, cex=0.6)
+abline(v=0)
+abline(v=c(-1,1), col="brown")
+abline(h=-log10(alpha), col="brown")
+dev.off()
+
+# Bach ajustment and data export
+vsdIOvC <- vst(ddsIOvC, blind=FALSE)
+mat <- assay(vsdIOvC)
+mm <- model.matrix(~group, colData(vsdIOvC))
+mat <- limma::removeBatchEffect(mat, batch=vsdIOvC$batch, design=mm)
+assay(vsdIOvC) <- mat
+colData(vsdIOvC)
+write.table(as.data.frame(mat), file=paste("DESeq-normalized-LIMMA-IOvC.txt", sep="."), quote=FALSE, sep="\t", col.names = NA, row.names = TRUE)
+
+
